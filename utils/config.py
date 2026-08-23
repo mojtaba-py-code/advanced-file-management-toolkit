@@ -13,10 +13,17 @@ from typing import Any
 
 from utils.exceptions import ConfigError
 
-try:  # PyYAML is a declared dependency, but we degrade gracefully in tests.
-    import yaml
+# PyYAML is a declared dependency, but the loader degrades gracefully when it
+# is missing. The name is typed as Any deliberately: whether mypy treats the
+# None fallback as an error depends on whether PyYAML ships type information on
+# the platform being checked, which differs between Linux, macOS and Windows.
+yaml: Any
+try:  # pragma: no cover - the except branch only runs without PyYAML
+    import yaml as _pyyaml
+
+    yaml = _pyyaml
 except ImportError:  # pragma: no cover - exercised only without PyYAML
-    yaml = None  # type: ignore[assignment]
+    yaml = None
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CONFIG_PATH = PROJECT_ROOT / "config" / "settings.yaml"

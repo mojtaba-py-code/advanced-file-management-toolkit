@@ -20,7 +20,7 @@ from core.batch import RenameRules, batch_rename
 from core.cleaner import clean
 from core.duplicate import resolve_duplicates
 from utils import security
-from utils.exceptions import SecurityError
+from utils.exceptions import PathValidationError, SecurityError
 from utils.security import is_filesystem_root, is_protected, validate_path
 
 
@@ -111,3 +111,28 @@ def test_resolve_duplicates_still_reports_on_a_protected_location(tmp_path: Path
     b.write_text("same", encoding="utf-8")
     result = resolve_duplicates(tmp_path, action="report")
     assert result.extra["groups"] == 1
+
+
+# ---------------------------------------------------------------------------
+# Path resolution must fail with this module's own exception type
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("raised", [OSError, ValueError, RuntimeError])
+def test_resolve_path_wraps_every_platform_failure(raised, monkeypatch) -> None:
+    """A NUL byte raises OSError on Windows but ValueError on POSIX.
+
+    Either way the caller must see PathValidationError, so this is forced
+    rather than left to whichever platform the test happens to run on.
+    """
+
+    def boom(self, strict=False):
+        raise raised("embedded null character in path")
+
+    monkeypatch.setattr(Path, "resolve", boom)
+    with pytest.raises(PathValidationError):
+        security.resolve_path("bad" + chr(0) + "name", strict=True)
+
+
+def test_resolve_path_rejects_a_null_byte_natively() -> None:
+    """The real thing, on whichever platform is running."""
+    with pytest.raises(PathValidationError):
+        security.resolve_path("bad" + chr(0) + "name", strict=True)

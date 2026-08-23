@@ -20,7 +20,7 @@ First public release.
 - Full / incremental / differential backups with manifest-based verification.
 - SQLite-backed operation history and JSON / CSV / TXT / HTML reporting.
 - Layered YAML configuration with a `security.allowed_roots` allow-list.
-- 128 tests at 90% coverage, including adversarial cases.
+- 132 tests at 90% coverage, including adversarial cases.
 - CI across Linux, macOS and Windows on Python 3.12 and 3.13, with ruff, mypy,
   bandit, pip-audit and a full-history secret scan.
 
@@ -34,5 +34,8 @@ First public release.
   three operations most able to damage a system.
 - `backups/` was ignored wholesale in `.gitignore`, so the directory was missing
   from a fresh clone.
+- `resolve_path()` let a raw `ValueError` escape on Linux and macOS. A NUL byte
+  in a path raises `OSError` on Windows but `ValueError` on POSIX, so callers
+  catching `PathValidationError` — the whole point of the wrapper — missed it.
 
 [1.0.0]: https://github.com/mojtaba-py-code/advanced-file-management-toolkit/releases/tag/v1.0.0

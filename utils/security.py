@@ -78,7 +78,10 @@ def resolve_path(path: str | os.PathLike[str], *, strict: bool = False) -> Path:
         resolved = Path(path).expanduser().resolve(strict=strict)
     except FileNotFoundError as exc:
         raise PathValidationError(f"Path does not exist: {path}") from exc
-    except (OSError, RuntimeError) as exc:
+    except (OSError, RuntimeError, ValueError) as exc:
+        # ValueError matters here: an embedded NUL byte raises OSError on
+        # Windows but ValueError on POSIX, and either way the caller should
+        # see this module's own exception type rather than a raw one.
         raise PathValidationError(f"Cannot resolve path: {path} ({exc})") from exc
     return resolved
 
