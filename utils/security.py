@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import os
 import sys
+import tempfile
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
@@ -97,6 +98,20 @@ def is_within(child: Path, parent: Path) -> bool:
         return False
 
 
+def _temp_root() -> Path | None:
+    """The OS-designated scratch directory, resolved, or ``None`` if unusable.
+
+    This exists because macOS hands out per-user temp directories under
+    ``/var/folders`` and resolves ``/var`` to ``/private/var``. Since ``/var``
+    is a protected subtree on Unix, without this exemption the toolkit would
+    refuse to operate in the very directory the OS provides for scratch work.
+    """
+    try:
+        return Path(tempfile.gettempdir()).resolve()
+    except (OSError, RuntimeError):  # pragma: no cover - platform dependent
+        return None
+
+
 def is_filesystem_root(path: Path) -> bool:
     r"""Return ``True`` when *path* is a filesystem root (``/`` or ``C:\``).
 
@@ -117,10 +132,19 @@ def is_protected(path: Path) -> bool:
       stay perfectly ordinary targets.
     * The curated OS directories are protected as **whole subtrees**, so a file
       inside ``C:\Windows`` or ``/etc`` is refused along with the directory.
+
+    The OS scratch directory is exempt even when it falls inside one of those
+    subtrees, which is what makes the toolkit usable under macOS's
+    ``/var/folders``.
     """
     resolved = path.resolve()
     if is_filesystem_root(resolved):
         return True
+    temp_root = _temp_root()
+    if temp_root is not None and is_within(resolved, temp_root):
+        # The scratch directory is user-writable by definition, even when it
+        # happens to sit inside a protected subtree (as it does on macOS).
+        return False
     # ``is_within`` already reports a directory as being within itself, so this
     # covers both the top of each subtree and everything beneath it.
     return any(is_within(resolved, root) for root in _protected_roots())

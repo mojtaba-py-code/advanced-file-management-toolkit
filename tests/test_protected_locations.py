@@ -12,6 +12,7 @@ Two properties matter here and both have bitten this module before:
 from __future__ import annotations
 
 import os
+import tempfile
 from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
@@ -136,3 +137,35 @@ def test_resolve_path_rejects_a_null_byte_natively() -> None:
     """The real thing, on whichever platform is running."""
     with pytest.raises(PathValidationError):
         security.resolve_path("bad" + chr(0) + "name", strict=True)
+
+
+# ---------------------------------------------------------------------------
+# The OS scratch directory must stay usable
+# ---------------------------------------------------------------------------
+def test_system_temp_directory_is_not_protected() -> None:
+    """macOS puts per-user temp dirs under /var/folders, and /var is denied."""
+    temp_root = Path(tempfile.gettempdir()).resolve()
+    assert is_protected(temp_root) is False
+    assert validate_path(temp_root, must_exist=True, for_write=True) == temp_root
+
+
+def test_temp_directory_is_exempt_even_inside_a_protected_subtree(monkeypatch) -> None:
+    """Reproduces the macOS layout on any platform.
+
+    Pin the temp root inside a directory that is on the deny-list and confirm
+    the exemption wins, so a regression is caught on Linux and Windows too.
+    """
+    protected = Path(security._POSIX_PROTECTED[-1] if os.name != "nt" else security._WINDOWS_PROTECTED[0])
+    fake_temp = protected / "folders" / "xy" / "scratch"
+
+    monkeypatch.setattr(security, "_temp_root", lambda: fake_temp)
+    assert is_protected(fake_temp / "pytest-of-runner" / "src") is False
+    # Its protected parent is still refused — the exemption is scoped, not a hole.
+    assert is_protected(protected / "something-else") is True
+
+
+def test_exemption_is_skipped_when_the_temp_root_is_unavailable(monkeypatch) -> None:
+    """A missing temp root must fail closed, not open."""
+    monkeypatch.setattr(security, "_temp_root", lambda: None)
+    probe = Path("C:/Windows") if os.name == "nt" else Path("/etc")
+    assert is_protected(probe) is True
