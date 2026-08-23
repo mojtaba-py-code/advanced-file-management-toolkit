@@ -1,0 +1,18 @@
+# Normalise line endings so the repository always stores LF, regardless of the
+# platform a contributor works on. This matters because CI runs on Linux, macOS
+# and Windows against the same checkout.
+* text=auto eol=lf
+
+# Windows-only scripts must keep CRLF to run correctly.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary files must never be munged.
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.gz  binary
+*.db  binary
