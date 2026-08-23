@@ -20,7 +20,7 @@ First public release.
 - Full / incremental / differential backups with manifest-based verification.
 - SQLite-backed operation history and JSON / CSV / TXT / HTML reporting.
 - Layered YAML configuration with a `security.allowed_roots` allow-list.
-- 144 tests at 90% coverage, including adversarial cases.
+- 146 tests at 90% coverage, including adversarial cases.
 - CI across Linux, macOS and Windows on Python 3.12 and 3.13, with ruff, mypy,
   bandit, pip-audit and a full-history secret scan.
 

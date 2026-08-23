@@ -53,10 +53,25 @@ def test_clearing_the_policy_restores_unrestricted_access(tmp_path: Path) -> Non
     assert validate_path(tmp_path, must_exist=True)
 
 
-def test_an_unresolvable_root_is_rejected_not_ignored() -> None:
-    """A typo in the confinement list must fail loudly, never widen access."""
+@pytest.mark.parametrize("raised", [OSError, ValueError, RuntimeError])
+def test_an_unresolvable_root_is_rejected_not_ignored(raised, monkeypatch) -> None:
+    """A bad entry in the confinement list must fail loudly, never widen access.
+
+    The failure is forced rather than fed a platform-specific bad path: which
+    inputs are unresolvable differs by OS and by Python version (3.13 on Windows
+    tolerates a NUL byte that 3.12 rejects), and the contract under test is
+    "whatever cannot be resolved is refused", not "this string is invalid here".
+    """
+
+    def boom(self, strict=False):
+        raise raised("cannot resolve")
+
+    monkeypatch.setattr(Path, "resolve", boom)
     with pytest.raises(SecurityError):
-        set_allowed_roots(["bad" + chr(0) + "root"])
+        set_allowed_roots(["some-root"])
+    # And the policy must not have been left half-applied.
+    monkeypatch.undo()
+    assert get_allowed_roots() == ()
 
 
 def test_explicit_argument_overrides_the_policy(tmp_path: Path) -> None:
