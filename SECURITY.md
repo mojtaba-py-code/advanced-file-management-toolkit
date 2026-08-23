@@ -54,14 +54,20 @@ the person running it is trusted.
 
 ## Confining operations
 
-Set `security.allowed_roots` in `config/settings.yaml` to restrict every
-operation to an explicit allow-list of directories. This is the strongest single
-control the toolkit offers and is recommended for unattended or scheduled runs:
+Set `security.allowed_roots` in `config/settings.yaml` to restrict every path the
+toolkit validates to an explicit allow-list of directories. It is applied once at
+startup, before any command runs, and enforced inside `validate_path` so a call
+site cannot forget it. This is the strongest single control the toolkit offers
+and is recommended for unattended or scheduled runs:
 
 ```yaml
 security:
   allowed_roots:
     - /srv/data
     - /mnt/backup
-  protect_system_paths: true
 ```
+
+An invalid entry is rejected at startup rather than skipped, so a typo in the
+list can never silently widen what is permitted. Refusing protected OS locations
+and requiring confirmation before a destructive action are always on and are
+deliberately not configurable.

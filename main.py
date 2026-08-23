@@ -45,6 +45,7 @@ from core.cli_helpers import (
     warn,
 )
 from database.history import HistoryDB
+from utils import security
 from utils.config import Config
 from utils.exceptions import OperationError, ToolkitError
 from utils.logging_config import setup_logging
@@ -439,6 +440,14 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     cfg = Config.load(getattr(args, "config", None))
+
+    # Apply the confinement policy before any handler can touch the filesystem.
+    try:
+        security.set_allowed_roots(cfg.get("security.allowed_roots", []))
+    except ToolkitError as exc:
+        error(f"Error: {exc}")
+        return 2
+
     log_cfg = dict(cfg.section("logging"))
     if getattr(args, "verbose", False):
         log_cfg["level"] = "DEBUG"

@@ -98,6 +98,41 @@ def is_within(child: Path, parent: Path) -> bool:
         return False
 
 
+# ---------------------------------------------------------------------------
+# Confinement policy
+# ---------------------------------------------------------------------------
+# When set, every path validated through this module must live inside one of
+# these roots. It is stored here rather than threaded through each operation so
+# there is exactly one place the rule can be applied — and exactly one place it
+# can be got wrong.
+_ALLOWED_ROOTS: tuple[Path, ...] = ()
+
+
+def set_allowed_roots(roots: Iterable[str | os.PathLike[str]] | None) -> None:
+    """Confine every subsequent validation to *roots*.
+
+    Passing ``None`` or an empty sequence clears the restriction. Roots that
+    cannot be resolved are rejected rather than silently dropped, because a
+    typo in a confinement list must not quietly widen what is permitted.
+    """
+    global _ALLOWED_ROOTS
+    if not roots:
+        _ALLOWED_ROOTS = ()
+        return
+    resolved: list[Path] = []
+    for root in roots:
+        try:
+            resolved.append(Path(root).expanduser().resolve())
+        except (OSError, RuntimeError, ValueError) as exc:
+            raise SecurityError(f"Invalid allowed root {root!r}: {exc}") from exc
+    _ALLOWED_ROOTS = tuple(resolved)
+
+
+def get_allowed_roots() -> tuple[Path, ...]:
+    """Return the currently configured confinement roots (empty = unrestricted)."""
+    return _ALLOWED_ROOTS
+
+
 def _temp_root() -> Path | None:
     """The OS-designated scratch directory, resolved, or ``None`` if unusable.
 
@@ -191,8 +226,11 @@ def validate_path(
     if for_write and is_protected(resolved):
         raise SecurityError(f"Refusing to modify a protected system location: {resolved}")
 
-    if allowed_roots:
-        roots = [resolve_path(r, strict=False) for r in allowed_roots]
+    # An explicit argument wins; otherwise fall back to the configured policy,
+    # so a caller that forgets to pass roots still gets confined.
+    effective_roots = allowed_roots if allowed_roots is not None else _ALLOWED_ROOTS
+    if effective_roots:
+        roots = [resolve_path(r, strict=False) for r in effective_roots]
         if not any(is_within(resolved, root) for root in roots):
             raise SecurityError(
                 f"Path {resolved} is outside the allowed root(s): {', '.join(str(r) for r in roots)}"

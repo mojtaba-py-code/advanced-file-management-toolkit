@@ -20,7 +20,7 @@ First public release.
 - Full / incremental / differential backups with manifest-based verification.
 - SQLite-backed operation history and JSON / CSV / TXT / HTML reporting.
 - Layered YAML configuration with a `security.allowed_roots` allow-list.
-- 135 tests at 90% coverage, including adversarial cases.
+- 144 tests at 90% coverage, including adversarial cases.
 - CI across Linux, macOS and Windows on Python 3.12 and 3.13, with ruff, mypy,
   bandit, pip-audit and a full-history secret scan.
 
@@ -34,6 +34,11 @@ First public release.
   three operations most able to damage a system.
 - `backups/` was ignored wholesale in `.gitignore`, so the directory was missing
   from a fresh clone.
+- `security.allowed_roots` was documented as confining every operation, but no
+  code path read it — setting it did nothing at all. It is now applied at
+  startup and enforced inside `validate_path`. `require_confirmation` and
+  `protect_system_paths` were dead config too; both behaviours are always on,
+  so the keys were removed rather than left implying they could be turned off.
 - The deny-list refused the OS scratch directory on macOS, where per-user temp
   directories live under `/var/folders` and `/var` is a protected subtree. The
   temp root is now exempt, which made every write operation unusable there.

@@ -41,8 +41,6 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "security": {
         # When non-empty, all operations are confined to these roots.
         "allowed_roots": [],
-        "require_confirmation": True,
-        "protect_system_paths": True,
     },
     "hashing": {
         "algorithm": "sha256",

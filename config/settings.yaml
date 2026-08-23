@@ -10,11 +10,14 @@ general:
   follow_symlinks: false  # Never follow symlinks by default (safer)
 
 security:
-  # When this list is non-empty, ALL operations are confined to these roots.
-  # Leaving it empty means "no root restriction" — set it for hardened setups.
+  # When this list is non-empty, every path the toolkit validates must live
+  # inside one of these roots. Leaving it empty means "no root restriction".
+  # Set it for unattended or scheduled runs.
   allowed_roots: []
-  require_confirmation: true   # Prompt before destructive actions
-  protect_system_paths: true   # Refuse to modify OS/system directories
+
+  # Note: refusing to modify protected OS locations, and requiring confirmation
+  # before a destructive action, are always on. They are deliberately not
+  # configurable — a safety net you can switch off in a config file is not one.
 
 hashing:
   algorithm: sha256       # sha256 | sha1 | md5
