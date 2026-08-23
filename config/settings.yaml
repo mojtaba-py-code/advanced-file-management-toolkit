@@ -1,0 +1,41 @@
+# Advanced File Management Toolkit — main configuration.
+# Every key here overrides a built-in default (see utils/config.py:DEFAULT_CONFIG).
+# Anything you omit falls back to the safe default automatically.
+
+general:
+  dry_run: false          # Preview actions without touching the filesystem
+  recursive: true         # Descend into sub-directories
+  threads: 4              # Worker threads for parallel scanning/hashing
+  skip_hidden: false      # Ignore dot-files / dot-directories
+  follow_symlinks: false  # Never follow symlinks by default (safer)
+
+security:
+  # When this list is non-empty, ALL operations are confined to these roots.
+  # Leaving it empty means "no root restriction" — set it for hardened setups.
+  allowed_roots: []
+  require_confirmation: true   # Prompt before destructive actions
+  protect_system_paths: true   # Refuse to modify OS/system directories
+
+hashing:
+  algorithm: sha256       # sha256 | sha1 | md5
+  chunk_size: 1048576     # 1 MiB — streamed so huge files stay memory-safe
+
+backup:
+  destination: backups
+  compression: true
+  verify: true            # Re-hash after backup to confirm integrity
+
+logging:
+  level: INFO             # DEBUG | INFO | WARNING | ERROR | CRITICAL
+  directory: logs
+  file: toolkit.log
+  max_bytes: 5242880      # Rotate at 5 MiB
+  backup_count: 5
+  console: true
+
+reporting:
+  directory: reports
+  default_format: json    # json | csv | txt | html
+
+database:
+  path: database/history.db
