@@ -5,7 +5,7 @@ pytest>=8.0.0
 pytest-cov>=5.0.0
 
 # Lint, types and security (the same tools CI runs)
-ruff>=0.6.0
+ruff>=0.16.4
 mypy>=1.11.0
 bandit>=1.7.9
 pip-audit>=2.7.0
