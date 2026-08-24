@@ -1,0 +1,36 @@
+version: 2
+
+updates:
+  # Python dependencies. Grouped so a routine week produces one reviewable PR
+  # rather than six, while security fixes still arrive on their own.
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    open-pull-requests-limit: 5
+    groups:
+      python-dependencies:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    commit-message:
+      prefix: "deps"
+      include: scope
+
+  # GitHub Actions. These are pinned by commit SHA, which is the right call for
+  # supply-chain safety but means they never move on their own — Dependabot is
+  # what keeps a pinned SHA from quietly going stale and missing a fix.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "ci"
+      include: scope
