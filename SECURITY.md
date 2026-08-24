@@ -38,15 +38,17 @@ the person running it is trusted.
 | Accidental data loss | Destructive actions require `--force` or an interactive confirmation, and all of them support `--dry-run` |
 | Silent overwrites | Colliding writes are auto-renamed rather than clobbering an existing file |
 | Silent corruption | Backups are re-hashed after writing and verified against a manifest |
+| Decompression bombs | Extraction is capped by total expanded bytes (2 GiB default) and by declared expansion ratio (200:1 default); both are overridable with `--max-size` / `--max-ratio` |
+| Memory exhaustion | Archive members are streamed in chunks, never read into memory whole |
 
 ### What it explicitly does not defend against
 
 - **A malicious operator.** The toolkit constrains mistakes, not a user who
   deliberately points it somewhere destructive with `--force`.
 - **Privilege escalation.** It never elevates; it runs as the invoking user.
-- **Decompression bombs.** Extraction does not currently cap the expanded size of
-  an archive, so a crafted archive can fill the target disk. Extract untrusted
-  archives onto a volume you can afford to fill.
+- **Nested decompression bombs.** The expansion limits apply to a single
+  extraction. An archive containing another archive is not recursively expanded,
+  so extracting the inner one is a separate, separately-limited operation.
 - **TOCTOU races.** A path validated and then modified by another process
   between the check and the operation is not detected.
 - **Cryptographic guarantees.** Checksums detect accidental corruption. They are

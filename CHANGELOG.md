@@ -20,7 +20,10 @@ First public release.
 - Full / incremental / differential backups with manifest-based verification.
 - SQLite-backed operation history and JSON / CSV / TXT / HTML reporting.
 - Layered YAML configuration with a `security.allowed_roots` allow-list.
-- 146 tests at 90% coverage, including adversarial cases.
+- Decompression-bomb limits on extraction: a ceiling on total expanded bytes and
+  on declared expansion ratio, both overridable via `--max-size` / `--max-ratio`.
+  Archive members are streamed in chunks so none is held in memory whole.
+- 159 tests at 90% coverage, including adversarial cases.
 - CI across Linux, macOS and Windows on Python 3.12 and 3.13, with ruff, mypy,
   bandit, pip-audit and a full-history secret scan.
 
@@ -34,6 +37,11 @@ First public release.
   three operations most able to damage a system.
 - `backups/` was ignored wholesale in `.gitignore`, so the directory was missing
   from a fresh clone.
+- `verify_archive()` read each tar member into memory in full to test it, so
+  verifying a large archive could exhaust RAM. Members are now streamed.
+- A truncated or tampered archive raised `zipfile.BadZipFile` / `tarfile.TarError`
+  straight out of `extract_archive()`, past callers that catch `ToolkitError`.
+  These are now wrapped as `OperationError`.
 - `security.allowed_roots` was documented as confining every operation, but no
   code path read it — setting it did nothing at all. It is now applied at
   startup and enforced inside `validate_path`. `require_confirmation` and

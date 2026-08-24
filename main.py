@@ -159,6 +159,26 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("extract", parents=[common], help="Safely extract an archive.")
     p.add_argument("archive")
     p.add_argument("output")
+    p.add_argument(
+        "--max-size",
+        type=_optional_size,
+        default=archive.DEFAULT_MAX_EXTRACT_BYTES,
+        metavar="SIZE",
+        help=(
+            "Ceiling on total expanded output, e.g. 500MB (default: 2GB). "
+            "Guards against decompression bombs. Use 'none' to lift it."
+        ),
+    )
+    p.add_argument(
+        "--max-ratio",
+        type=_optional_ratio,
+        default=archive.DEFAULT_MAX_COMPRESSION_RATIO,
+        metavar="N",
+        help=(
+            "Refuse an archive declaring more than N:1 expansion "
+            f"(default: {archive.DEFAULT_MAX_COMPRESSION_RATIO}). Use 'none' to lift it."
+        ),
+    )
 
     # clean ----------------------------------------------------------------
     p = sub.add_parser("clean", parents=[common], help="Remove empty folders, zero-byte and temp files.")
@@ -214,6 +234,20 @@ def build_parser() -> argparse.ArgumentParser:
 # ---------------------------------------------------------------------------
 # Command handlers
 # ---------------------------------------------------------------------------
+def _optional_size(value: str) -> int | None:
+    """Parse a size limit, where the literal ``none`` lifts the limit."""
+    if value.strip().lower() == "none":
+        return None
+    return parse_size(value)
+
+
+def _optional_ratio(value: str) -> int | None:
+    """Parse a ratio limit, where the literal ``none`` lifts the limit."""
+    if value.strip().lower() == "none":
+        return None
+    return int(value)
+
+
 def _resolve_recursive(args: argparse.Namespace, cfg: Config) -> bool:
     if args.recursive is not None:
         return args.recursive
@@ -311,7 +345,13 @@ def cmd_archive(args, cfg, db) -> OperationResult:
 
 
 def cmd_extract(args, cfg, db) -> OperationResult:
-    return archive.extract_archive(args.archive, args.output, dry_run=args.dry_run)
+    return archive.extract_archive(
+        args.archive,
+        args.output,
+        dry_run=args.dry_run,
+        max_bytes=args.max_size,
+        max_ratio=args.max_ratio,
+    )
 
 
 def cmd_clean(args, cfg, db) -> OperationResult:

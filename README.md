@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/mojtaba-py-code/advanced-file-management-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/mojtaba-py-code/advanced-file-management-toolkit/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=flat&logo=python&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-146%20passing-brightgreen?style=flat)
+![Tests](https://img.shields.io/badge/tests-159%20passing-brightgreen?style=flat)
 ![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?style=flat)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=flat)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=flat)
@@ -27,7 +27,7 @@ Built around a *safe-by-default* philosophy: every destructive action supports *
 | 5 | **Restore** | Restore any backup (directory or `.zip`) with integrity checking |
 | 6 | **Search Engine** | Find files by name, regex, extension, size, date, content or hash |
 | 7 | **Batch Rename** | Prefix, suffix, numbering, replace, regex and case conversion — with preview |
-| 8 | **Archive Manager** | Create/extract/verify ZIP & TAR archives (hardened against zip-slip) |
+| 8 | **Archive Manager** | Create/extract/verify ZIP & TAR archives (hardened against zip-slip and decompression bombs) |
 | 9 | **Integrity Checker** | SHA-256 / SHA-1 / MD5 manifests, streamed for huge files |
 | 10 | **Disk Analyzer** | Storage stats: largest files, largest folders, breakdown by type |
 | 11 | **Cleaner** | Remove empty folders, zero-byte files and temp files safely |
@@ -67,7 +67,7 @@ advanced_file_toolkit/
 ├── database/
 │   └── history.py          # SQLite-backed operation history
 │
-├── tests/                  # 146 tests · 90% coverage
+├── tests/                  # 159 tests · 90% coverage
 ├── logs/  reports/  backups/
 │
 ├── .github/workflows/ci.yml    # tests on 3 OSes × 2 Python versions + lint, types, security
@@ -145,6 +145,9 @@ python main.py rename ./photos --prefix vacation_ --number --dry-run
 python main.py archive ./logs ./logs.zip
 python main.py extract ./logs.zip ./logs_restored
 
+# Extract an untrusted archive with a tighter expansion ceiling
+python main.py extract ./untrusted.zip ./out --max-size 100MB
+
 # Clean empty folders, zero-byte and temp files
 python main.py clean ./workspace --dry-run
 
@@ -194,6 +197,9 @@ Security is a first-class concern, centralised in `utils/security.py`:
   explicit allow-list. Enforced in one place, applied before any command runs.
 - **Protected locations** — refuses to modify OS/system directories (`C:\Windows`, `/etc`, …) or a
   filesystem root itself, and every destructive entry point enforces it.
+- **Decompression limits** — extraction is bounded by total expanded size and by declared
+  expansion ratio, so a zip bomb cannot fill the disk. Members stream in chunks, never
+  wholly into memory. Both limits are overridable (`--max-size`, `--max-ratio`).
 - **No silent overwrites** — colliding writes are auto-renamed (`report (1).txt`).
 - **Confirmation & dry-run** — destructive operations require `--force` or an interactive *yes*, and
   every one supports `--dry-run` to preview first.
@@ -212,7 +218,7 @@ pytest                                   # run the suite
 pytest --cov=core --cov=utils --cov=database --cov-report=term-missing
 ```
 
-**146 tests, 90% coverage**, including adversarial cases (zip-slip, path traversal, protected-location
+**159 tests, 90% coverage**, including adversarial cases (zip-slip, path traversal, protected-location
 refusal, rename collisions, integrity mismatch).
 
 ---
