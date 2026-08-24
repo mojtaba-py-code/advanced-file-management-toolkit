@@ -1,26 +1,30 @@
 version: 2
 
 updates:
-  # Python dependencies. Grouped so a routine week produces one reviewable PR
-  # rather than six, while security fixes still arrive on their own.
+  # Python dependencies: security updates only.
+  #
+  # The requirements files use ">=" floors, so a version-update PR raises a
+  # minimum that already permitted the newer release -- it changes nothing about
+  # what actually gets installed. Four such PRs arrived within minutes of
+  # enabling this, none of them altering a single resolved version.
+  #
+  # A limit of 0 turns off those version updates while leaving Dependabot
+  # security updates fully active, which is the part that matters here.
   - package-ecosystem: pip
     directory: "/"
     schedule:
       interval: weekly
       day: monday
       time: "06:00"
-    open-pull-requests-limit: 5
-    groups:
-      python-dependencies:
-        patterns: ["*"]
-        update-types: ["minor", "patch"]
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "deps"
       include: scope
 
-  # GitHub Actions. These are pinned by commit SHA, which is the right call for
-  # supply-chain safety but means they never move on their own — Dependabot is
-  # what keeps a pinned SHA from quietly going stale and missing a fix.
+  # GitHub Actions: version updates very much wanted. These are pinned by commit
+  # SHA, which is the right call for supply-chain safety but means they never
+  # move on their own — Dependabot is what keeps a pinned SHA from quietly going
+  # stale and missing the fix it was pinned to avoid needing.
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
