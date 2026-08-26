@@ -83,6 +83,11 @@ source = ["core", "utils", "database"]
 omit = ["tests/*"]
 
 [tool.coverage.report]
+# The floor is a ratchet, not a target: line coverage sits at 90%, and the gate
+# is set below it so an unrelated refactor does not fail the build while a real
+# drop in tested behaviour still does. pytest-cov reads this, so a local
+# `pytest --cov` gates on exactly the number CI does. Raise it as coverage rises.
+fail_under = 85
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",

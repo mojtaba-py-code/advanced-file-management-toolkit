@@ -2,8 +2,8 @@
 
 [![CI](https://github.com/mojtaba-py-code/advanced-file-management-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/mojtaba-py-code/advanced-file-management-toolkit/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=flat&logo=python&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-159%20passing-brightgreen?style=flat)
-![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?style=flat)
+![Tests](https://img.shields.io/badge/tests-160%20passing-brightgreen?style=flat)
+![Coverage](https://img.shields.io/badge/coverage-%E2%89%A585%25%20enforced%20in%20CI-brightgreen?style=flat)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=flat)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=flat)
 
@@ -67,7 +67,7 @@ advanced_file_toolkit/
 ├── database/
 │   └── history.py          # SQLite-backed operation history
 │
-├── tests/                  # 159 tests · 90% coverage
+├── tests/                  # 160 tests · 90% coverage, 85% floor enforced in CI
 ├── logs/  reports/  backups/
 │
 ├── .github/workflows/ci.yml    # tests on 3 OSes × 2 Python versions + lint, types, security
@@ -218,7 +218,7 @@ pytest                                   # run the suite
 pytest --cov=core --cov=utils --cov=database --cov-report=term-missing
 ```
 
-**159 tests, 90% coverage**, including adversarial cases (zip-slip, path traversal, protected-location
+**160 tests, 90% coverage** with an 85% floor enforced in CI, including adversarial cases (zip-slip, path traversal, protected-location
 refusal, rename collisions, integrity mismatch).
 
 ---
