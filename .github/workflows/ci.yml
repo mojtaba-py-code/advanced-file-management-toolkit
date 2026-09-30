@@ -1,13 +1,14 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
   pull_request:
     branches: [main]
   schedule:
     # Weekly, so dependency advisories surface even when nothing is pushed.
-    - cron: "0 6 * * 1"
+    - cron: "20 6 * * 1"
 
 permissions:
   contents: read
